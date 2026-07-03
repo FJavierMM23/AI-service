@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Datos locales (no queremos subir manuales ni la BD vectorial al repo)
+manuales/*
+!manuales/.gitkeep
+chroma_db/
+*.pdf
+*.md
+!README.md
+
+# Entorno
+.env
+
+# IDE
+.vscode/
+.idea/
