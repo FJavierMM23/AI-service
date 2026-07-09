@@ -20,6 +20,7 @@ class Chunk:
 
 @dataclass
 class SearchResult:
+    """Un resultado de búsqueda semántica: chunk + métricas de similitud."""
     chunk: Chunk
-    score: float
-    distancia: float
+    score: float          # Similitud normalizada 0-1 (más alto = más parecido)
+    distance: float       # Distancia bruta devuelta por la BD vectorial

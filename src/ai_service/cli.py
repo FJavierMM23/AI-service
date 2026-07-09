@@ -5,6 +5,8 @@ from pathlib import Path
 from ai_service.config import settings
 from ai_service.loaders import load_document, load_directory
 from ai_service.chunker import split_document
+from ai_service.ingestion import ingest_path
+from ai_service.vectorstore import get_store
 
 app = typer.Typer(help="AI-service CLI")
 
@@ -49,37 +51,33 @@ def ingest(
     path: str,
     chunk_size: int = 2000,
     overlap: int = 300,
-    show_text: bool = False,
+    replace: bool = True,
 ):
-    """Carga un documento o directorio y muestra los chunks generados"""
-    target = Path(path)
+    """Carga documento(s) y los persiste vectorizados en la BD.
 
-    if target.is_dir():
-        documents = load_directory(target)
-    else:
-        documents = [load_document(target)]
-
-    if not documents:
-        typer.echo("No se encontraron documentos soportados.")
+    Uso: ai-service ingest manuales/foo.pdf
+         ai-service ingest manuales/ --chunk-size 1500
+    """
+    try:
+        report = ingest_path(
+            path=path,
+            chunk_size=chunk_size,
+            overlap=overlap,
+            replace_existing=replace,
+        )
+    except FileNotFoundError as e:
+        typer.echo(f"✗ {e}", err=True)
+        raise typer.Exit(1)
+    except ValueError as e:
+        typer.echo(f"✗ {e}", err=True)
         raise typer.Exit(1)
 
-    total_chunks = 0
-    for doc in documents:
-        chunks = split_document(doc, chunk_size=chunk_size, overlap=overlap)
-        total_chunks += len(chunks)
+    typer.echo(f"\n✓ Ingesta completada en {report.elapsed_seconds:.1f}s")
+    typer.echo(f"  Documentos: {report.documents_processed}")
+    typer.echo(f"  Chunks:     {report.chunks_created}")
+    for src in report.sources:
+        typer.echo(f"    - {src}")
 
-        typer.echo(f"\n📄 {doc.source}")
-        typer.echo(f"   Caracteres: {len(doc.text):,}")
-        typer.echo(f"   Chunks: {len(chunks)}")
-
-        for chunk in chunks:
-            page = chunk.metadata.get("page", "?")
-            preview = chunk.text[:80].replace("\n", " ")
-            typer.echo(f"   [{chunk.chunk_index:>3}] pag.{page} ({len(chunk.text)} chars) {preview}...")
-            if show_text:
-                typer.echo(f"\n{chunk.text}\n{'-' * 60}")
-
-    typer.echo(f"\n✓ Total: {len(documents)} documento(s), {total_chunks} chunk(s)")
 
 @app.command()
 def search(
@@ -88,40 +86,87 @@ def search(
     show_text: bool = False,
 ):
     """Busca los chunks más relevantes para una pregunta.
-    
+
     Uso: ai-service search "cómo funciona la memoria virtual"
          ai-service search "..." --top-k 3 --show-text
     """
-    ...
+    store = get_store()
+    results = store.search(query, top_k=top_k)
 
-@app.command()
-def list_docs():   # el nombre "list" es una builtin de Python, evitamos colisión
+    typer.echo(f"\n🔍 Query: {query!r}")
+    if not results:
+        typer.echo("Sin resultados. ¿Has ingestado algún documento?")
+        return
+
+    typer.echo(f"Resultados ({len(results)}):\n")
+    for i, r in enumerate(results, start=1):
+        page = r.chunk.metadata.get("page", "?")
+        preview = r.chunk.text[:120].replace("\n", " ")
+        typer.echo(
+            f"[{i}] score={r.score:.3f}  {r.chunk.source}  "
+            f"pág.{page}  chunk#{r.chunk.chunk_index}"
+        )
+        typer.echo(f"    {preview}...")
+        if show_text:
+            typer.echo(f"\n{r.chunk.text}\n{'-' * 60}")
+
+
+@app.command("list-docs")
+def list_docs():
     """Lista los documentos indexados con su número de chunks."""
-    ...
+    store = get_store()
+    sources = store.list_sources()
+    if not sources:
+        typer.echo("La BD está vacía.")
+        return
+
+    typer.echo(f"\nDocumentos indexados ({len(sources)}):")
+    for src, n in sorted(sources.items()):
+        typer.echo(f"  {n:>4} chunks  {src}")
+    typer.echo(f"\nTotal: {store.count()} chunks")
 
 
 @app.command()
 def stats():
-    """Muestra estadísticas: nº total de chunks, modelo, ruta de la BD."""
-    ...
+    """Muestra estadísticas: nº total de chunks, modelo y ruta de la BD."""
+    store = get_store()
+    typer.echo("\n📊 Estadísticas del ai-service")
+    typer.echo(f"  Chunks totales:    {store.count()}")
+    typer.echo(f"  Documentos:        {len(store.list_sources())}")
+    typer.echo(f"  Modelo embeddings: {settings.embedding_model}")
+    typer.echo(f"  Modelo LLM:        {settings.llm_model}")
+    typer.echo(f"  Ollama URL:        {settings.ollama_url}")
+    typer.echo(f"  Ruta ChromaDB:     {settings.chroma_path}")
 
 
 @app.command()
 def delete(source: str):
     """Borra todos los chunks de un documento por nombre.
-    
+
     Uso: ai-service delete manual_docker.pdf
     """
-    ...
+    store = get_store()
+    n = store.delete_by_source(source)
+    if n == 0:
+        typer.echo(f"No había chunks del source '{source}'.")
+    else:
+        typer.echo(f"✓ Eliminados {n} chunks del source '{source}'.")
 
 
 @app.command()
 def reset(yes: bool = False):
     """Vacía completamente la BD vectorial (irreversible).
-    
+
     Uso: ai-service reset --yes
     """
-    ...
+    if not yes:
+        typer.echo("Esto BORRARÁ todos los chunks indexados.")
+        typer.echo("Vuelve a ejecutar con --yes para confirmar.")
+        raise typer.Exit(1)
+
+    store = get_store()
+    store.reset()
+    typer.echo("✓ Base de datos vaciada.")
 
 
 if __name__ == "__main__":
