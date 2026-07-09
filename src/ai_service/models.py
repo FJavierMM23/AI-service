@@ -16,3 +16,10 @@ class Chunk:
     source: str                  # De qué documento viene
     chunk_index: int             # Posición del chunk dentro del documento (0, 1, 2...)
     metadata: dict = field(default_factory=dict)  # Página de origen, etc.
+
+
+@dataclass
+class SearchResult:
+    chunk: Chunk
+    score: float
+    distancia: float

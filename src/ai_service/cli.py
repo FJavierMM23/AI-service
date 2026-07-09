@@ -81,6 +81,48 @@ def ingest(
 
     typer.echo(f"\n✓ Total: {len(documents)} documento(s), {total_chunks} chunk(s)")
 
+@app.command()
+def search(
+    query: str,
+    top_k: int = 5,
+    show_text: bool = False,
+):
+    """Busca los chunks más relevantes para una pregunta.
+    
+    Uso: ai-service search "cómo funciona la memoria virtual"
+         ai-service search "..." --top-k 3 --show-text
+    """
+    ...
+
+@app.command()
+def list_docs():   # el nombre "list" es una builtin de Python, evitamos colisión
+    """Lista los documentos indexados con su número de chunks."""
+    ...
+
+
+@app.command()
+def stats():
+    """Muestra estadísticas: nº total de chunks, modelo, ruta de la BD."""
+    ...
+
+
+@app.command()
+def delete(source: str):
+    """Borra todos los chunks de un documento por nombre.
+    
+    Uso: ai-service delete manual_docker.pdf
+    """
+    ...
+
+
+@app.command()
+def reset(yes: bool = False):
+    """Vacía completamente la BD vectorial (irreversible).
+    
+    Uso: ai-service reset --yes
+    """
+    ...
+
 
 if __name__ == "__main__":
     app()
