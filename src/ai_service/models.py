@@ -24,3 +24,12 @@ class SearchResult:
     chunk: Chunk
     score: float          # Similitud normalizada 0-1 (más alto = más parecido)
     distance: float       # Distancia bruta devuelta por la BD vectorial
+
+
+@dataclass
+class RagAnswer:
+    """Respuesta generada por el pipeline RAG."""
+    answer: str                       # El texto redactado por el LLM
+    sources: list[SearchResult]       # Los chunks que se usaron como contexto
+    question: str                     # La pregunta original
+    model: str                        # Qué modelo LLM generó la respuesta

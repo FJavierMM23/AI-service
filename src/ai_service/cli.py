@@ -7,6 +7,7 @@ from ai_service.loaders import load_document, load_directory
 from ai_service.chunker import split_document
 from ai_service.ingestion import ingest_path
 from ai_service.vectorstore import get_store
+from ai_service.rag import ask as rag_ask
 
 app = typer.Typer(help="AI-service CLI")
 
@@ -167,6 +168,39 @@ def reset(yes: bool = False):
     store = get_store()
     store.reset()
     typer.echo("✓ Base de datos vaciada.")
+
+
+@app.command()
+def ask(
+    question: str,
+    top_k: int = 5,
+    min_score: float = 0.3,
+    show_sources: bool = True,
+):
+    """Hace una pregunta y responde usando los documentos indexados.
+
+    Uso: ai-service ask "¿qué es CAS y qué clases lo usan?"
+    """
+    typer.echo(f"\n🤔 Pregunta: {question}")
+    typer.echo("⏳ Buscando y generando respuesta...\n")
+
+    try:
+        result = rag_ask(question, top_k=top_k, min_score=min_score)
+    except ValueError as e:
+        typer.echo(f"✗ {e}", err=True)
+        raise typer.Exit(1)
+
+    typer.echo("💬 Respuesta:")
+    typer.echo(result.answer)
+
+    if show_sources and result.sources:
+        typer.echo(f"\n📚 Fuentes ({len(result.sources)}):")
+        for r in result.sources:
+            page = r.chunk.metadata.get("page", "?")
+            typer.echo(
+                f"  - {r.chunk.source} (pág. {page}, "
+                f"chunk #{r.chunk.chunk_index}, score {r.score:.3f})"
+            )
 
 
 if __name__ == "__main__":
