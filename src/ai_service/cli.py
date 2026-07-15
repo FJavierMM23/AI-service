@@ -50,8 +50,8 @@ def hello(prompt: str = "Di 'hola mundo' en español."):
 @app.command()
 def ingest(
     path: str,
-    chunk_size: int = 2000,
-    overlap: int = 300,
+    chunk_size: int = 1000,
+    overlap: int = 150,
     replace: bool = True,
 ):
     """Carga documento(s) y los persiste vectorizados en la BD.
@@ -173,7 +173,7 @@ def reset(yes: bool = False):
 @app.command()
 def ask(
     question: str,
-    top_k: int = 5,
+    top_k: int = 8,
     min_score: float = 0.3,
     show_sources: bool = True,
 ):
@@ -193,7 +193,7 @@ def ask(
     typer.echo("💬 Respuesta:")
     typer.echo(result.answer)
 
-    if show_sources and result.sources:
+    if show_sources and result.sources and "no encuentro información" not in result.answer.lower():
         typer.echo(f"\n📚 Fuentes ({len(result.sources)}):")
         for r in result.sources:
             page = r.chunk.metadata.get("page", "?")

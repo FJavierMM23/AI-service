@@ -14,7 +14,7 @@ from ai_service.vectorstore import ChromaStore, get_store
 
 def ask(
     question: str,
-    top_k: int = 5,
+    top_k: int = 8,
     min_score: float = 0.3,
     store: ChromaStore | None = None,
 ) -> RagAnswer:

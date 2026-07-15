@@ -3,8 +3,8 @@ import re
 from ai_service.models import Chunk, Document
 
 # Configuración por defecto (en caracteres)
-DEFAULT_CHUNK_SIZE = 2000     # ~500 tokens
-DEFAULT_OVERLAP = 300         # ~75 tokens
+DEFAULT_CHUNK_SIZE = 1000     # ~500 tokens
+DEFAULT_OVERLAP = 150         # ~75 tokens
 
 # Regex para detectar el marcador de página que insertó el pdf_loader
 PAGE_MARKER = re.compile(r"\[page:(\d+)\]")

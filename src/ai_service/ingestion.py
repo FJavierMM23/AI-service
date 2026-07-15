@@ -24,8 +24,8 @@ class IngestionReport:
 
 def ingest_path(
     path: str | Path,
-    chunk_size: int = 2000,
-    overlap: int = 300,
+    chunk_size: int = 1000,
+    overlap: int = 150,
     replace_existing: bool = True,
     store: ChromaStore | None = None,
 ) -> IngestionReport:
