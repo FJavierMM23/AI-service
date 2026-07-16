@@ -28,8 +28,8 @@ Construido con **Python + FastAPI + ChromaDB + Ollama**.
                     │  └──────┬────────────┬──────────┘       │
                     │         │            │                  │
                     │   ┌─────▼─────┐ ┌────▼──────┐           │
-                    │   │vectorstore│ │  loaders   │           │
-                    │   │ (ChromaDB)│ │  chunker   │           │
+                    │   │vectorstore│ │  loaders  │           │
+                    │   │ (ChromaDB)│ │  chunker  │           │
                     │   └─────┬─────┘ └───────────┘           │
                     │         │                               │
                     │   ┌─────▼──────────────┐                │
@@ -85,13 +85,13 @@ ai-service health
 ```bash
 # Indexar un documento o directorio completo
 ai-service ingest manuales/
-ai-service ingest manuales/mi_manual.pdf --chunk-size 1000 --overlap 150
+ai-service ingest manuales/mi_archivo.pdf --chunk-size 1000 --overlap 150 # También acepta markdown (.md)
 
 # Preguntar
-ai-service ask "¿qué es CAS y en qué clases lo usan?"
+ai-service ask "pregunta o duda sobre los archivos que haya en /manuales"
 
 # Búsqueda semántica pura (sin LLM, solo retrieval)
-ai-service search "memoria virtual" --top-k 5 --show-text
+ai-service search "busqueda de los chunks que hay en /manuales" --top-k 5 --show-text
 
 # Gestión
 ai-service list-docs             # documentos indexados
@@ -130,23 +130,23 @@ curl -X POST http://localhost:8000/documents \
 # Preguntar
 curl -X POST http://localhost:8000/query \
   -H "Content-Type: application/json" \
-  -d '{"question": "¿qué es CAS?", "top_k": 8, "min_score": 0.3}'
+  -d '{"question": "pregunta", "top_k": 8, "min_score": 0.3}'
 ```
 
 Respuesta de `/query`:
 
 ```json
 {
-  "answer": "CAS (Compare-And-Swap) es una instrucción de la CPU que...",
+  "answer": "respuesta",
   "sources": [
     {
-      "source": "estructuras_datos_concurrentes.md",
+      "source": "archivo son su extensión",
       "page": 1,
       "chunk_index": 1,
       "score": 0.842
     }
   ],
-  "question": "¿qué es CAS?",
+  "question": "pregunta a la que responde",
   "model": "qwen2.5:7b"
 }
 ```
