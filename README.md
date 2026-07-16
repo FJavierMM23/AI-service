@@ -68,8 +68,12 @@ cd AI-service
 
 # Entorno virtual e instalación
 uv venv
-source .venv/bin/activate        # bash/zsh
-# source .venv/bin/activate.fish # fish
+# Linux o Mac
+  source .venv/bin/activate        # bash/zsh
+  # source .venv/bin/activate.fish # fish
+# Windows
+  .venv\Scripts\Activate.ps1       # powershell
+  .venv\Scripts\Activate.bat       # cmd
 
 uv pip install -e ".[dev]"
 
