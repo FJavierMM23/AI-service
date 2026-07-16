@@ -1,0 +1,21 @@
+services:
+  ai-service:
+    build: .
+    container_name: ai-service
+    ports:
+      - "8000:8000"
+    environment:
+      # host.docker.internal apunta al host (donde corre Ollama)
+      - OLLAMA_URL=http://host.docker.internal:11434
+      - LLM_MODEL=qwen2.5:7b
+      - EMBEDDING_MODEL=bge-m3
+    extra_hosts:
+      # Necesario en Linux para que host.docker.internal funcione
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - chroma_data:/data/chroma
+      - manuales_data:/data/manuales
+
+volumes:
+  chroma_data:
+  manuales_data:
