@@ -15,7 +15,7 @@ from ai_service.vectorstore import get_store
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
-SUPPORTED_EXTENSIONS = (".pdf", ".md", ".markdown", ".txt")
+SUPPORTED_EXTENSIONS = (".pdf", ".md", ".markdown", ".txt", ".docx", ".pptx", ".xlsx", ".html", ".htm")
 
 
 @router.get("", response_model=DocumentListResponse)

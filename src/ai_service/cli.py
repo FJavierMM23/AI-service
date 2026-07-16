@@ -203,5 +203,19 @@ def ask(
             )
 
 
+@app.command()
+def preview(path: str, chars: int = 3000):
+    """Convierte un documento y muestra el texto extraído (sin indexar)."""
+    from ai_service.loaders import load_document
+
+    doc = load_document(path)
+    typer.echo(f"📄 {doc.source} — {len(doc.text):,} caracteres")
+    typer.echo(f"   Metadatos: {doc.metadata}")
+    typer.echo("=" * 60)
+    typer.echo(doc.text[:chars])
+    if len(doc.text) > chars:
+        typer.echo(f"\n[... {len(doc.text) - chars:,} caracteres más ...]")
+
+
 if __name__ == "__main__":
     app()

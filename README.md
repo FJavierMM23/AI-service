@@ -89,7 +89,7 @@ ai-service health
 ```bash
 # Indexar un documento o directorio completo
 ai-service ingest manuales/
-ai-service ingest manuales/mi_archivo.pdf --chunk-size 1000 --overlap 150 # También acepta markdown (.md)
+ai-service ingest manuales/mi_archivo.pdf --chunk-size 1000 --overlap 150 # También acepta (.md, .markdown, .txt, .docx, .pptx, .xlsx, .html, .htm)
 
 # Preguntar
 ai-service ask "pregunta o duda sobre los archivos que haya en /manuales"

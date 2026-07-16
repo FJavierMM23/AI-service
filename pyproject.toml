@@ -13,6 +13,7 @@ dependencies = [
     "pypdf>=5.0.0",
     "typer>=0.13.0",
     "python-multipart>=0.0.12",
+    "markitdown[pdf,docx,pptx,xlsx]>=0.1.0",
 ]
 
 [project.optional-dependencies]
