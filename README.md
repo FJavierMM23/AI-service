@@ -52,13 +52,76 @@ Construido con **Python + FastAPI + ChromaDB + Ollama**.
 ## Requisitos
 
 - Python ≥ 3.11
-- [Ollama](https://ollama.com) corriendo en local con los modelos:
-  ```bash
+- [Ollama](https://ollama.com) con los modelos:
+```bash
   ollama pull bge-m3           # embeddings
   ollama pull qwen2.5:7b       # generación
-  ```
+```
 - [uv](https://docs.astral.sh/uv/) (recomendado) o pip
 - Docker + Docker Compose (opcional, para el despliegue containerizado)
+
+### Aceleración por GPU (opcional pero muy recomendable)
+
+Con GPU, la generación de respuestas es entre 3 y 5 veces más rápida que en CPU.
+Verifica el estado con `ollama ps` tras hacer una consulta: la columna
+`PROCESSOR` debe indicar `100% GPU`.
+
+**NVIDIA (Windows / Linux):** funciona automáticamente si tienes los drivers
+oficiales instalados (CUDA viene incluido en Ollama). No requiere configuración.
+
+**Apple Silicon (macOS):** aceleración automática vía Metal. No requiere
+configuración — es la plataforma con menos fricción.
+
+**AMD en Windows:** las RX 6000/7000/9000 de escritorio están soportadas
+automáticamente por el instalador oficial (backend ROCm incluido).
+
+**AMD en Linux:** instala la variante ROCm (`ollama-rocm` en Arch/CachyOS) y
+reinicia el servicio. **Solo si `ollama ps` sigue mostrando `100% CPU`**
+(típico en RX 6600/6650/6700, no soportadas oficialmente por ROCm), añade un
+override con `sudo systemctl edit ollama`:
+
+```ini
+[Service]
+Environment="HSA_OVERRIDE_GFX_VERSION=10.3.0"
+```
+
+Para la serie RX 7000 con problemas de detección, el valor sería `11.0.0`.
+Los logs de detección: `journalctl -u ollama | grep -iE "gpu|vram|gfx"`
+
+### Instalación de Ollama por sistema operativo
+
+**Linux (Arch/CachyOS):**
+```bash
+sudo pacman -S ollama          # o ollama-rocm para GPU AMD (ver sección GPU)
+sudo systemctl enable --now ollama
+```
+
+**Linux (otras distros):**
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+**macOS:**
+```bash
+brew install ollama
+brew services start ollama     # o abre la app Ollama descargada de ollama.com
+```
+
+**Windows:**
+Descarga el instalador desde [ollama.com/download](https://ollama.com/download) y ejecútalo.
+Ollama queda corriendo como aplicación en segundo plano.
+
+### Instalación de uv por sistema operativo
+
+**Linux / macOS:**
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**Windows (PowerShell):**
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
 
 ## Instalación (desarrollo local)
 
@@ -66,19 +129,35 @@ Construido con **Python + FastAPI + ChromaDB + Ollama**.
 git clone https://github.com/FJavierMM23/AI-service.git
 cd AI-service
 
-# Entorno virtual e instalación
 uv venv
-# Linux o Mac
-  source .venv/bin/activate        # bash/zsh
-  # source .venv/bin/activate.fish # fish
-# Windows
-  .venv\Scripts\Activate.ps1       # powershell
-  .venv\Scripts\Activate.bat       # cmd
+```
 
+Activar el entorno virtual:
+
+```bash
+# Linux / macOS (bash/zsh)
+source .venv/bin/activate
+
+# Linux / macOS (fish)
+source .venv/bin/activate.fish
+
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+
+# Windows (cmd)
+.venv\Scripts\activate.bat
+```
+
+Instalar y configurar:
+
+```bash
 uv pip install -e ".[dev]"
 
-# Configuración
-cp .env.example .env             # edita si es necesario
+# Configuración (Linux/macOS)
+cp .env.example .env
+
+# Configuración (Windows PowerShell)
+copy .env.example .env
 
 # Verificar que Ollama está accesible
 ai-service health
@@ -168,10 +247,15 @@ El servicio queda en `http://localhost:8000` con:
 - **Healthcheck** integrado (permite `depends_on: condition: service_healthy` desde otros servicios).
 - **Conexión a Ollama del host** vía `host.docker.internal`.
 
-> **Nota (Linux):** Ollama debe escuchar en todas las interfaces (`OLLAMA_HOST=0.0.0.0` vía override de systemd) y, si usas un firewall como ufw, permitir el tráfico desde las redes de Docker:
-> ```bash
-> sudo ufw allow from 172.16.0.0/12 to any port 11434 proto tcp
-> ```
+> **Nota por sistema operativo:**
+> - **Windows / macOS** (Docker Desktop): `host.docker.internal` funciona
+>   directamente, sin configuración adicional.
+> - **Linux**: Ollama debe escuchar en todas las interfaces
+>   (`OLLAMA_HOST=0.0.0.0` vía override de systemd). Si usas un firewall
+>   como ufw, permite el tráfico desde las redes de Docker:
+>   ```bash
+>   sudo ufw allow from 172.16.0.0/12 to any port 11434 proto tcp
+>   ```
 
 ## Configuración
 

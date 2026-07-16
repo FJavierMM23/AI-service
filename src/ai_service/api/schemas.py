@@ -17,6 +17,7 @@ class QueryRequest(BaseModel):
 class SourceInfo(BaseModel):
     source: str
     page: int | None = None
+    section: str | None = None
     chunk_index: int
     score: float
 

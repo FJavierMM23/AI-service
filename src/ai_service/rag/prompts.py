@@ -13,7 +13,8 @@ conocimiento general.
 claramente: "No encuentro información sobre esto en los documentos indexados." \
 No intentes adivinar ni completar con conocimiento externo.
 3. Cita siempre las fuentes que uses, con el formato [fuente, pág. N] al final \
-de cada afirmación relevante.
+de cada afirmación relevante. Usa exactamente la sección o página que \
+aparece en el contexto; no inventes números de página.
 4. Responde en el mismo idioma en el que está formulada la pregunta.
 5. Sé conciso y directo. Si la respuesta tiene varios puntos, organízalos con \
 claridad."""
@@ -25,16 +26,19 @@ NO_CONTEXT_ANSWER = (
 
 
 def build_context(results: list[SearchResult]) -> str:
-    """Formatea los SearchResult en un bloque de contexto legible por el LLM.
-
-    Cada chunk se presenta con su fuente y página para que el modelo
-    pueda citarlas en la respuesta.
-    """
+    """Formatea los SearchResult en un bloque de contexto legible por el LLM."""
     blocks = []
     for r in results:
+        section = r.chunk.metadata.get("section")
         page = r.chunk.metadata.get("page")
-        page_info = f", página {page}" if page is not None else ""
-        header = f"[Fuente: {r.chunk.source}{page_info}]"
+
+        location = ""
+        if section:
+            location = f", sección: {section}"
+        elif page is not None:
+            location = f", página {page}"
+
+        header = f"[Fuente: {r.chunk.source}{location}]"
         blocks.append(f"{header}\n{r.chunk.text}")
 
     return "\n\n---\n\n".join(blocks)

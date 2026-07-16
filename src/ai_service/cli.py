@@ -1,10 +1,8 @@
 import httpx
 import typer
-from pathlib import Path
 
 from ai_service.config import settings
-from ai_service.loaders import load_document, load_directory
-from ai_service.chunker import split_document
+from ai_service.loaders import load_document
 from ai_service.ingestion import ingest_path
 from ai_service.vectorstore import get_store
 from ai_service.rag import ask as rag_ask
@@ -101,11 +99,13 @@ def search(
 
     typer.echo(f"Resultados ({len(results)}):\n")
     for i, r in enumerate(results, start=1):
-        page = r.chunk.metadata.get("page", "?")
+        section = r.chunk.metadata.get("section")
+        page = r.chunk.metadata.get("page")
+        location = f"§ {section}" if section else f"pág.{page}" if page else ""
         preview = r.chunk.text[:120].replace("\n", " ")
         typer.echo(
             f"[{i}] score={r.score:.3f}  {r.chunk.source}  "
-            f"pág.{page}  chunk#{r.chunk.chunk_index}"
+            f"{location}  chunk#{r.chunk.chunk_index}"
         )
         typer.echo(f"    {preview}...")
         if show_text:
@@ -196,9 +196,11 @@ def ask(
     if show_sources and result.sources and "no encuentro información" not in result.answer.lower():
         typer.echo(f"\n📚 Fuentes ({len(result.sources)}):")
         for r in result.sources:
-            page = r.chunk.metadata.get("page", "?")
+            section = r.chunk.metadata.get("section")
+            page = r.chunk.metadata.get("page")
+            location = f"sección: {section}" if section else f"pág. {page}"
             typer.echo(
-                f"  - {r.chunk.source} (pág. {page}, "
+                f"  - {r.chunk.source} ({location}, "
                 f"chunk #{r.chunk.chunk_index}, score {r.score:.3f})"
             )
 
@@ -206,7 +208,6 @@ def ask(
 @app.command()
 def preview(path: str, chars: int = 3000):
     """Convierte un documento y muestra el texto extraído (sin indexar)."""
-    from ai_service.loaders import load_document
 
     doc = load_document(path)
     typer.echo(f"📄 {doc.source} — {len(doc.text):,} caracteres")

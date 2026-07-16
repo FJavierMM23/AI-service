@@ -20,6 +20,7 @@ def query(request: QueryRequest):
         SourceInfo(
             source=r.chunk.source,
             page=r.chunk.metadata.get("page"),
+            section=r.chunk.metadata.get("section"),
             chunk_index=r.chunk.chunk_index,
             score=round(r.score, 4),
         )
