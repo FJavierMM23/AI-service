@@ -29,7 +29,6 @@ def ingest_path(
     replace_existing: bool = True,
     store: ChromaStore | None = None,
     extra_metadata: dict | None = None,
-    store=None,
 ) -> IngestionReport:
     """Ingesta un fichero o un directorio completo en el vector store.
 

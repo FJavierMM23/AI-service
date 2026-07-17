@@ -42,7 +42,7 @@ def ask(
     if store is None:
         store = get_store()
 
-    results = store.search(question, top_k=top_k, filters=filters)
+    results = store.search(question, top_k=top_k, where=filters)
     relevant = [r for r in results if r.score >= min_score]
 
     if not relevant:
