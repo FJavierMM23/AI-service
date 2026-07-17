@@ -38,7 +38,7 @@ Construido con **Python + FastAPI + ChromaDB + Ollama**.
                     └─────────┼───────────────────────────────┘
                               │ HTTP
                         ┌─────▼─────┐
-                        │  Ollama   │  (bge-m3 + qwen2.5:7b)
+                        │  Ollama   │  (bge-m3 + gemma4:e4b-it-q4_K_M)
                         └───────────┘
 ```
 
@@ -55,8 +55,9 @@ Construido con **Python + FastAPI + ChromaDB + Ollama**.
 - [Ollama](https://ollama.com) con los modelos:
 ```bash
   ollama pull bge-m3           # embeddings
-  ollama pull qwen2.5:7b       # generación
+  ollama pull gemma4:e4b-it-q4_K_M    # generación (modelo por defecto)
 ```
+  El modelo de generación es intercambiable — ver [Modelos LLM disponibles](#modelos-llm-disponibles).
 - [uv](https://docs.astral.sh/uv/) (recomendado) o pip
 - Docker + Docker Compose (opcional, para el despliegue containerizado)
 
@@ -270,6 +271,31 @@ Variables de entorno (fichero `.env` en local, `environment:` en Docker Compose)
 | `DOCUMENTS_PATH` | `./manuales` | Directorio de documentos subidos por la API |
 | `API_HOST` | `0.0.0.0` | Host de la API |
 | `API_PORT` | `8000` | Puerto de la API |
+| `DEFAULT_TOP_K` | `5` | Nº de chunks que recupera el retrieval por consulta |
+| `DEFAULT_MIN_SCORE` | `0.7` | Umbral de similitud (0–1); por debajo, el chunk se descarta como ruido |
+
+### Modelos LLM disponibles
+ 
+El modelo de generación es intercambiable: descárgalo con `ollama pull` y cambia `LLM_MODEL` en tu `.env` — no hay que tocar código. El de embeddings (`bge-m3`) es mejor no cambiarlo: rinde bien en español técnico y cambiarlo obliga a re-ingerir todos los documentos.
+ 
+| Modelo (`LLM_MODEL`) | Perfil | Tamaño en disco |
+|----------------------|--------|-----------------|
+| `gemma4:e2b-it` | El más ligero y rápido. Para CPU o GPUs con poca VRAM / servidores modestos. Menor calidad. | ver [ollama.com](https://ollama.com/library) |
+| `gemma4:e4b-it-q4_K_M` **(por defecto)** | Modelo por defecto; buen equilibrio calidad/velocidad para este proyecto. | 9,6 GB |
+| `qwen2.5:7b` | Muy buen seguidor de instrucciones; grounding sólido. | 4,7 GB |
+| `qwen3.5:9b` | Más capaz que qwen2.5, algo más pesado. | ver [ollama.com](https://ollama.com/library) |
+| `phi4:14b` | El más capaz en razonamiento, y el más pesado. | ver [ollama.com](https://ollama.com/library) |
+ 
+```bash
+# Ejemplo: cambiar a un modelo más ligero (p. ej. para un servidor 24/7)
+ollama pull gemma4:e2b-it
+# y en .env:  LLM_MODEL=gemma4:e2b-it
+```
+ 
+> Los tamaños marcados son el peso en disco del modelo (aproximadamente lo que ocupa en VRAM al cargarlo); consulta el resto con `ollama list` o en [ollama.com/library](https://ollama.com/library). Si un modelo supera tu VRAM, Ollama reparte capas entre GPU y CPU: sigue funcionando, pero más lento. Verifica con `ollama ps` que la columna `PROCESSOR` indique `100% GPU`.
+>
+> **Grounding y tamaño de modelo:** los modelos pequeños (e2b/e4b) se distraen más con contexto de ruido, así que conviene un `DEFAULT_MIN_SCORE` algo más alto (~0.7–0.8). Los modelos grandes toleran mejor un umbral más bajo.
+
 
 ## Tests
 

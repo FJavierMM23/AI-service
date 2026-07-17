@@ -173,8 +173,8 @@ def reset(yes: bool = False):
 @app.command()
 def ask(
     question: str,
-    top_k: int = 8,
-    min_score: float = 0.3,
+    top_k: int | None = None,
+    min_score: float | None = None,
     show_sources: bool = True,
 ):
     """Hace una pregunta y responde usando los documentos indexados.

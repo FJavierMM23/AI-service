@@ -10,8 +10,8 @@ from pydantic import BaseModel, Field
 
 class QueryRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
-    top_k: int = Field(default=8, ge=1, le=20)
-    min_score: float = Field(default=0.3, ge=0.0, le=1.0)
+    top_k: int | None = Field(default=None, ge=1, le=20)
+    min_score: float | None = Field(default=None, ge=0.0, le=1.0)
 
 
 class SourceInfo(BaseModel):

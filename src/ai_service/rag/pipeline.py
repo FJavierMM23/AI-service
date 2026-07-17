@@ -14,8 +14,8 @@ from ai_service.vectorstore import ChromaStore, get_store
 
 def ask(
     question: str,
-    top_k: int = 8,
-    min_score: float = 0.3,
+    top_k: int | None = None,
+    min_score: float | None = None,
     store: ChromaStore | None = None,
 ) -> RagAnswer:
     """Responde una pregunta usando los documentos indexados.
@@ -31,6 +31,12 @@ def ask(
     """
     if not question or not question.strip():
         raise ValueError("La pregunta no puede estar vacía.")
+
+    # None = "usa el default de config" (una sola fuente de verdad: .env).
+    if top_k is None:
+        top_k = settings.default_top_k
+    if min_score is None:
+        min_score = settings.default_min_score
 
     if store is None:
         store = get_store()
