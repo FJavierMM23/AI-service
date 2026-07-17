@@ -28,6 +28,8 @@ def ingest_path(
     overlap: int = 150,
     replace_existing: bool = True,
     store: ChromaStore | None = None,
+    extra_metadata: dict | None = None,
+    store=None,
 ) -> IngestionReport:
     """Ingesta un fichero o un directorio completo en el vector store.
 
@@ -68,6 +70,9 @@ def ingest_path(
 
     for doc in documents:
         chunks = split_document(doc, chunk_size=chunk_size, overlap=overlap)
+        if extra_metadata:
+            for c in chunks:
+                c.metadata.update(extra_metadata)
         if not chunks:
             continue
 

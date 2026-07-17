@@ -1,7 +1,9 @@
 """Endpoints de gestión de documentos."""
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, HTTPException, UploadFile, Form
+
+import json
 
 from ai_service.api.schemas import (
     DeleteResponse,
@@ -31,8 +33,9 @@ def list_documents():
 
 
 @router.post("", response_model=UploadResponse, status_code=201)
-def upload_document(file: UploadFile):
+def upload_document(file: UploadFile, metadata: str | None = Form(None)):
     """Sube un fichero, lo guarda en el directorio de datos y lo indexa."""
+    extra = json.loads(metadata) if metadata else None
     if not file.filename:
         raise HTTPException(status_code=422, detail="El fichero no tiene nombre.")
 
@@ -53,7 +56,7 @@ def upload_document(file: UploadFile):
     content = file.file.read()
     dest.write_bytes(content)
 
-    report = ingest_path(dest)
+    report = ingest_path(dest, extra_metadata=extra)
 
     return UploadResponse(
         source=dest.name,

@@ -17,6 +17,7 @@ def ask(
     top_k: int | None = None,
     min_score: float | None = None,
     store: ChromaStore | None = None,
+    filters: dict[str, str | int | float | bool] | None = None,
 ) -> RagAnswer:
     """Responde una pregunta usando los documentos indexados.
 
@@ -41,7 +42,7 @@ def ask(
     if store is None:
         store = get_store()
 
-    results = store.search(question, top_k=top_k)
+    results = store.search(question, top_k=top_k, filters=filters)
     relevant = [r for r in results if r.score >= min_score]
 
     if not relevant:

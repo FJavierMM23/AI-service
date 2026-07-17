@@ -12,6 +12,7 @@ class QueryRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     top_k: int | None = Field(default=None, ge=1, le=20)
     min_score: float | None = Field(default=None, ge=0.0, le=1.0)
+    filters: dict[str, str | int | float | bool] | None = Field(default=None)
 
 
 class SourceInfo(BaseModel):

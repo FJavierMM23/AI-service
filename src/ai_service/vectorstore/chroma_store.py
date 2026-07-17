@@ -69,7 +69,7 @@ class ChromaStore:
         )
         return len(chunks)
 
-    def search(self, query: str, top_k: int = 5) -> list[SearchResult]:
+    def search(self, query: str, top_k: int = 5, where: dict | None = None) -> list[SearchResult]:
         """Busca los top_k chunks más similares a la query."""
         if top_k <= 0:
             return []
@@ -83,6 +83,7 @@ class ChromaStore:
         raw = self._collection.query(
             query_embeddings=[query_vector],
             n_results=effective_k,
+            where=where,
         )
 
         # Chroma devuelve listas anidadas [ [resultados_query_1], [resultados_query_2], ... ]
