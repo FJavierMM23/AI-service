@@ -49,6 +49,47 @@ Construido con **Python + FastAPI + ChromaDB + Ollama**.
 4. El LLM redacta la respuesta usando exclusivamente ese contexto.
 5. Se devuelve la respuesta junto con las fuentes utilizadas (documento, página, score).
 
+## Inicio rápido en Linux/macOS
+
+> Requiere [Ollama](https://ollama.com) y [uv](https://docs.astral.sh/uv/) instalados (ver [Requisitos](#requisitos)). Descarga primero los modelos:
+> ```bash
+> ollama pull bge-m3
+> ollama pull gemma4:e4b-it-q4_K_M
+> ```
+
+Arrancar en local:
+
+```bash
+git clone https://github.com/FJavierMM23/AI-service.git
+cd AI-service
+
+uv venv
+source .venv/bin/activate          # fish: source .venv/bin/activate.fish
+uv pip install -e ".[dev]"
+cp .env.example .env
+
+ai-service health                  # comprueba que Ollama responde
+```
+
+Y ya puedes usarlo por CLI:
+
+```bash
+ai-service ingest manuales/        # indexa tus documentos
+ai-service ask "tu pregunta"       # pregunta con RAG y fuentes citadas
+```
+
+O levantarlo como API REST (Swagger en http://localhost:8000/docs):
+
+```bash
+uvicorn ai_service.api.app:app --reload
+```
+
+O todo en contenedores:
+
+```bash
+docker compose build && docker compose up -d
+```
+
 ## Requisitos
 
 - Python ≥ 3.11
@@ -234,6 +275,28 @@ Respuesta de `/query`:
   "model": "qwen2.5:7b"
 }
 ```
+
+### Filtrado por metadatos
+
+`ai-service` almacena metadatos arbitrarios por documento y permite filtrar por ellos en la búsqueda, **sin que el servicio sepa qué significan** (se mantiene genérico). Útil, por ejemplo, para acotar una pregunta a una asignatura concreta.
+
+Al indexar, se adjuntan metadatos que quedan guardados en cada chunk:
+
+```bash
+curl -X POST http://localhost:8000/documents \
+  -F "file=@manuales/pc_semaforos.md" \
+  -F 'metadata={"asignatura":"PC","tema":"semaforos"}'
+```
+
+Al preguntar, se filtra con el campo `filters` (igualdad exacta, filtrado nativo de ChromaDB):
+
+```bash
+curl -X POST http://localhost:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{"question":"qué es un semáforo","filters":{"asignatura":"PC"}}'
+```
+
+Los metadatos se guardan como campos escalares en ChromaDB y el filtro aplica una condición `where` nativa: solo se recuperan los chunks que cumplen el criterio **antes** de aplicar el umbral `min_score`. Es la pieza sobre la que `manual-service` acota las preguntas por asignatura.
 
 ## Docker
 
