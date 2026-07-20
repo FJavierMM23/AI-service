@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from ai_service.api.routes import documents, health, query
+from ai_service.api.routes import documents, health, query, models
 from ai_service.embeddings import EmbeddingError, health_check
 from ai_service.llm import GenerationError
 
@@ -31,6 +31,7 @@ app = FastAPI(
 app.include_router(health.router)
 app.include_router(query.router)
 app.include_router(documents.router)
+app.include_router(models.router)
 
 
 # --- Manejadores globales de excepciones (el @ControllerAdvice) ---

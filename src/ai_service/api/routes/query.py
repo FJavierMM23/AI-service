@@ -15,6 +15,7 @@ def query(request: QueryRequest):
         top_k=request.top_k,
         min_score=request.min_score,
         filters=request.filters,
+        model=request.model,
     )
 
     sources = [

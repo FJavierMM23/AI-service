@@ -18,11 +18,15 @@ class GenerationError(Exception):
 # tardar minutos en CPU. Timeout generoso.
 _DEFAULT_TIMEOUT = 300.0
 
+# Listar modelos es una operación ligera (no genera texto), timeout corto.
+_TAGS_TIMEOUT = 10.0
+
 
 def generate(
     prompt: str,
     system: str | None = None,
     temperature: float = 0.1,
+    model: str | None = None,
 ) -> str:
     """Genera una respuesta de texto a partir de un prompt.
 
@@ -31,6 +35,9 @@ def generate(
         system: Instrucciones de sistema opcionales (comportamiento del modelo).
         temperature: Aleatoriedad de la generación. Para RAG se quiere BAJA
                      (0.0-0.2) porque buscamos fidelidad al contexto, no creatividad.
+        model: Modelo de Ollama a usar para ESTA llamada. Si es None, se usa
+               settings.llm_model (el del .env). No persiste nada: solo
+               afecta a esta petición concreta.
 
     Returns:
         El texto generado por el modelo.
@@ -52,7 +59,7 @@ def generate(
             response = client.post(
                 f"{settings.ollama_url}/api/chat",
                 json={
-                    "model": settings.llm_model,
+                    "model": model or settings.llm_model,
                     "messages": messages,
                     "stream": False,
                     "options": {
@@ -77,3 +84,26 @@ def generate(
         raise GenerationError(f"Respuesta inesperada de Ollama: {data!r}")
 
     return message["content"].strip()
+
+
+def list_models() -> list[str]:
+    """Lista los nombres de todos los modelos descargados en Ollama.
+
+    Incluye tanto los de generación como el de embeddings (bge-m3); quien
+    llama a esta función decide si filtra alguno.
+
+    Raises:
+        GenerationError: Si Ollama no responde.
+    """
+    try:
+        with httpx.Client(timeout=_TAGS_TIMEOUT) as client:
+            response = client.get(f"{settings.ollama_url}/api/tags")
+            response.raise_for_status()
+            data = response.json()
+    except httpx.HTTPError as e:
+        raise GenerationError(
+            f"No se pudo contactar con Ollama en {settings.ollama_url}: {e}"
+        ) from e
+
+    models = data.get("models", [])
+    return [m["name"] for m in models if "name" in m]

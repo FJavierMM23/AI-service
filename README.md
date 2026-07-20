@@ -343,11 +343,12 @@ El modelo de generación es intercambiable: descárgalo con `ollama pull` y camb
  
 | Modelo (`LLM_MODEL`) | Perfil | Tamaño en disco |
 |----------------------|--------|-----------------|
-| `gemma4:e2b-it` | El más ligero y rápido. Para CPU o GPUs con poca VRAM / servidores modestos. Menor calidad. | ver [ollama.com](https://ollama.com/library) |
-| `gemma4:e4b-it-q4_K_M` **(por defecto)** | Modelo por defecto; buen equilibrio calidad/velocidad para este proyecto. | 9,6 GB |
+| `qwen3.5:0.8b-q4_K_M` | Buena velocidad pero menor calidad de respuesta que otros modelos más pesado. Para CPU o GPUs con muy poca VRAM (1-2 GB) / servidores muy modestos. La menor calidad. | 0,9 GB |
+| `gemma4:e2b-it-q4_K_M` | El más ligero y rápido, con respuestas de calidad decente. Para CPU o GPUs con poca VRAM (4 GB) / servidores modestos. Menor calidad. | 3,1 GB |
+| `gemma4:e4b-it-q4_K_M` **(por defecto)** | Modelo por defecto; buen equilibrio calidad/velocidad para este proyecto. Se recomiendan GPUs con más de 8 GB | 4,6 GB |
 | `qwen2.5:7b` | Muy buen seguidor de instrucciones; grounding sólido. | 4,7 GB |
-| `qwen3.5:9b` | Más capaz que qwen2.5, algo más pesado. | ver [ollama.com](https://ollama.com/library) |
-| `phi4:14b` | El más capaz en razonamiento, y el más pesado. | ver [ollama.com](https://ollama.com/library) |
+| `qwen3.5:9b` | Más capaz que qwen2.5, algo más pesado. | 5,1 GB |
+| `phi4:14b-q4_K_M` | El más capaz en razonamiento, y el más pesado. Se recomiendan GPUs con más de 12 GB | 7,7 GB |
  
 ```bash
 # Ejemplo: cambiar a un modelo más ligero (p. ej. para un servidor 24/7)

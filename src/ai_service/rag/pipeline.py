@@ -18,6 +18,7 @@ def ask(
     min_score: float | None = None,
     store: ChromaStore | None = None,
     filters: dict[str, str | int | float | bool] | None = None,
+    model: str | None = None,
 ) -> RagAnswer:
     """Responde una pregunta usando los documentos indexados.
 
@@ -27,8 +28,9 @@ def ask(
       3. Si no queda ningún chunk → respuesta directa "no hay información"
          SIN llamar al LLM (ahorra tiempo y evita alucinaciones).
       4. Montar contexto y prompt.
-      5. Generar respuesta con el LLM.
-      6. Devolver RagAnswer con texto + fuentes utilizadas.
+      5. Generar respuesta con el LLM (usando `model` si se especifica,
+         o el modelo por defecto de settings en caso contrario).
+      6. Devolver RagAnswer con texto + fuentes utilizadas + modelo usado.
     """
     if not question or not question.strip():
         raise ValueError("La pregunta no puede estar vacía.")
@@ -38,6 +40,9 @@ def ask(
         top_k = settings.default_top_k
     if min_score is None:
         min_score = settings.default_min_score
+
+    # Mismo patrón: None = usar el modelo por defecto, sin tocar nada persistente.
+    modelo_usado = model or settings.llm_model
 
     if store is None:
         store = get_store()
@@ -50,16 +55,16 @@ def ask(
             answer=NO_CONTEXT_ANSWER,
             sources=[],
             question=question,
-            model=settings.llm_model,
+            model=modelo_usado,
         )
 
     context = build_context(relevant)
     prompt = build_user_prompt(context, question)
-    answer_text = generate(prompt, system=SYSTEM_PROMPT, temperature=0.1)
+    answer_text = generate(prompt, system=SYSTEM_PROMPT, temperature=0.1, model=modelo_usado)
 
     return RagAnswer(
         answer=answer_text,
         sources=relevant,
         question=question,
-        model=settings.llm_model,
+        model=modelo_usado,
     )
